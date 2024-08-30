@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    image: 'docker-spring-boot-postgres:latest'
+    build:
+      context: ../backend/
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=_
+      - POSTGRES_PASSWORD=_
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/Jolly
+      - SPRING_DATASOURCE_USERNAME=_
+      - SPRING_DATASOURCE_PASSWORD=_
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - JWT_SECRET = "_"
+
+    ports:
+      - 8088:8088
+
+  db:
+    image: postgres
+    container_name: db
+    environment:
+      - POSTGRES_PASSWORD=_
+      - POSTGRES_DB=Jolly
+      - POSTGRES_HOST_AUTH_METHOD= md5
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - 5433:5432
+  hp:
+    image: my-haproxy
+    container_name: hp
+    build:
+      context: .
+    ports:
+      - 80:80
+  
+  frontend:
+    image: jolly-frontend
+    container_name: jolly-frontend
+    build:
+      context: ../frontend/
+    depends_on:
+      - app
+    ports:
+      - 3000:3000
+
+  coturn_server:
+    image: coturn/coturn:4.5.2
+    restart: always
+    network_mode: "host"
+    volumes:
+      - ./turn/turnserver.conf:/etc/coturn/turnserver.conf
